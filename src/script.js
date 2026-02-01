@@ -2,7 +2,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     let guessedWords = [[]];
     let availableSpace = 1;
     let guessWordCount = 0; /*sıra sıra*/
+    
     let isGame = true;
+    let isHardMode = false; /*work on that later*/
 
     let word = "";
     let wordList = [];
@@ -15,7 +17,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function loadWords() {
         try{
-            const response = await fetch('data/words.json');
+            const wordFileName = isHardMode ? 'data/hard_words.json' : 'data/easy_words.json';
+            const response = await fetch(wordFileName);
             wordList = await response.json();
 
             const randomIndex = Math.floor(Math.random() * wordList.length);
