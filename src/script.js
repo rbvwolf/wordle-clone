@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     let guessedWords = [[]];
     let availableSpace = 1;
     let guessWordCount = 0; /*sıra sıra*/
+    let isGame = true;
 
     let word = "";
     let wordList = [];
@@ -154,12 +155,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         guessWordCount++;
 
         if(currentWord === word){
-            setTimeout( () => alert("correct!"), 1200);
+            setTimeout( () => {alert("correct!");}, 1200);
+            isGame = false;
             return;
         }
 
         if(guessedWords.length === 6){
-            setTimeout( () => alert(`You have no more tries, word was: ${word}`), 1200);
+            setTimeout( () => {alert(`You have no more tries, word was: ${word}`); isGame = false;}, 1200);
         }
 
         guessedWords.push([]);
@@ -195,19 +197,34 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     for(let i = 0; i < keys.length; i++){
         keys[i].onclick = ({target}) => {
+            if(!isGame) return;
             const key = target.getAttribute("data-key");
-
-            if (key == "enter"){
-                handleSubmitWord();
-                return;
-            }
-
-            if (key == "del"){
-                handleDeleteKey();
-                return;
-            }
-
-            updateGuessedWords(key);
+            handleInput(key);
         }
+    }
+
+    document.body.onkeydown = (e) => {
+        if(e.key === "Enter" || e.key === "Backspace" || isLetter(e.key)){
+            handleInput(e.key);
+        }
+    }
+
+    function handleInput(key){
+        if(!isGame) return;
+        const normalizedKey = key.toLocaleLowerCase('tr-TR');
+
+        if(normalizedKey === "enter"){
+            handleSubmitWord();
+        }
+        else if(normalizedKey === "del" || normalizedKey === "backspace"){
+            handleDeleteKey();
+        }
+        else if(isLetter(normalizedKey)){
+            updateGuessedWords(normalizedKey);
+        }
+    }
+
+    function isLetter(key){
+        return key.length === 1 && key.match(/[a-zA-ZçğıöşüÇĞİÖŞÜ]/i);
     }
 });
