@@ -155,10 +155,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if(currentWord === word){
             setTimeout( () => alert("correct!"), 1200);
+            return;
         }
 
         if(guessedWords.length === 6){
-            alert(`You have no more tries, word was: ${word}`);
+            setTimeout( () => alert(`You have no more tries, word was: ${word}`), 1200);
         }
 
         guessedWords.push([]);
