@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     let word = "";
     let wordList = [];
+    let allWordList = [];
 
     const colorGreen = "rgb(83, 141, 78)";
     const colorOrange = "rgb(181, 159, 59)";
@@ -18,11 +19,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     async function loadWords() {
         try{
             const wordFileName = isHardMode ? 'data/hard_words.json' : 'data/easy_words.json';
+            const allWordsFileName = 'data/clean_combined_words.json';
             const response = await fetch(wordFileName);
-            wordList = await response.json();
+            let rawWordList = await response.json();
 
+            const allresponse = await fetch(allWordsFileName);
+            let rawAllWordList = await allresponse.json();
+
+            function normalizeTurkish(word){
+                return word.toLocaleLowerCase('tr-TR').replace(/â/g, 'a').replace(/î/g, 'i').replace(/û/g, 'u');
+            }
+
+            wordList = rawWordList.map(w => normalizeTurkish(w));
+            allWordList = rawAllWordList.map(w => normalizeTurkish(w));
+            
             const randomIndex = Math.floor(Math.random() * wordList.length);
-            word = wordList[randomIndex].toLocaleLowerCase('tr-TR');
+            word = wordList[randomIndex];
 
             console.log("Words are loaded!");
             console.log("sil bunu, kelime: " + word);
@@ -33,6 +45,37 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     const keys = document.querySelectorAll(".keyboard-row button");
+
+    function showModal(title, message){
+        document.getElementById("modal-title").textContent = title;
+        document.getElementById("modal-message").innerHTML = message;
+        document.getElementById("modal-overlay").classList.remove("hidden");
+    }
+
+    function resetGame(){
+        guessedWords = [[]];
+        availableSpace = 1;
+        guessWordCount = 0;
+        isGame = true;
+
+        const randomIndex = Math.floor(Math.random() * wordList.length);
+        word = wordList[randomIndex].toLocaleLowerCase('tr-TR');
+
+        const gameBoard = document.getElementById("board");
+        gameBoard.innerHTML = "";
+        createSquares();
+
+        keys.forEach(keyBtn => {
+            keyBtn.style.backgroundColor = "";
+            keyBtn.style.color = "";
+            keyBtn.style.borderColor = "";
+        })
+
+        document.getElementById("modal-overlay").classList.add("hidden");
+        console.log("sil bunu, kelime: " + word);
+    }
+
+    document.getElementById("reset-button").addEventListener("click", resetGame);
 
     function formatForDisplay(char){
         if(char === "i") return "İ";
@@ -114,6 +157,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const currentWord = currentWordArr.join('').toLocaleLowerCase('tr-TR');;
         
+        if(!allWordList.includes(currentWord)){
+            console.warn("Theres no word in the word list but continue testing");
+            //return;
+        }
+
         /*smart painting alg, first gray, then green, than orange*/
         let letterCounts = {};
         for (let char of word){
@@ -158,13 +206,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         guessWordCount++;
 
         if(currentWord === word){
-            setTimeout( () => {alert("correct!");}, 1200);
+            setTimeout( () => {
+                showModal("Congrats!", `You find the word: <strong>${word.toLocaleUpperCase('tr-TR')}</strong>`)
+                }, 1200);
             isGame = false;
             return;
         }
 
         if(guessedWords.length === 6){
-            setTimeout( () => {alert(`You have no more tries, word was: ${word}`); isGame = false;}, 1200);
+            setTimeout( () => {
+                showModal("You Lose!", `You tried but it didnt work. <br>Word was: <strong>${word.toLocaleUpperCase('tr-TR')}</strong>`)
+                }, 1200);
+            isGame = false;
+            return;
         }
 
         guessedWords.push([]);
